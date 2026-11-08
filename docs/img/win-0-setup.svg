@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <rect width="900" height="300" rx="14" fill="#f3f3f3" stroke="#d0d7de"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1e4fc4"/></linearGradient>
+  </defs>
+  <!-- 1 welcome -->
+  <g transform="translate(20,40)">
+    <rect width="200" height="190" rx="8" fill="#fff" stroke="#d0d7de"/>
+    <rect width="66" height="190" rx="8" fill="url(#g)"/><rect x="58" width="8" height="190" fill="url(#g)"/>
+    <rect x="13" y="40" width="40" height="40" rx="9" fill="#2f6fe0" stroke="#ffffff55"/>
+    <text x="33" y="68" font-size="22" fill="#fff" text-anchor="middle" font-weight="700">អ</text>
+    <text x="33" y="104" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">Akkhara</text>
+    <text x="33" y="176" font-size="7" fill="#dbe7ff" text-anchor="middle">by Ing Muyleang</text>
+    <text x="76" y="34" font-size="11" font-weight="700" fill="#1b1f24">Welcome to</text>
+    <text x="76" y="48" font-size="11" font-weight="700" fill="#1b1f24">Akkhara Keyboard</text>
+    <text x="76" y="72" font-size="9" fill="#444">nh jg tv sala rean →</text>
+    <text x="76" y="86" font-size="10" fill="#444">ខ្ញុំចង់ទៅសាលារៀន</text>
+    <text x="76" y="112" font-size="8.5" fill="#6b7280">Made by Ing Muyleang</text>
+    <rect x="136" y="160" width="54" height="20" rx="4" fill="#1baf7a"/><text x="163" y="174" font-size="10" fill="#fff" text-anchor="middle">Next</text>
+  </g>
+  <!-- 2 folder -->
+  <g transform="translate(240,40)">
+    <rect width="200" height="190" rx="8" fill="#fff" stroke="#d0d7de"/>
+    <text x="12" y="26" font-size="11" font-weight="700" fill="#1b1f24">Select Destination Location</text>
+    <text x="12" y="52" font-size="9" fill="#6b7280">Install Akkhara into:</text>
+    <rect x="12" y="60" width="128" height="22" rx="3" fill="#fff" stroke="#1baf7a" stroke-width="2"/>
+    <text x="18" y="75" font-size="9" fill="#1b1f24">C:\Program Files\Akkhara</text>
+    <rect x="146" y="60" width="44" height="22" rx="3" fill="#f6f8fa" stroke="#d0d7de"/><text x="168" y="75" font-size="9" fill="#1b1f24" text-anchor="middle">Browse</text>
+    <text x="12" y="104" font-size="8.5" fill="#6b7280">Keep the default, or choose</text>
+    <text x="12" y="116" font-size="8.5" fill="#6b7280">another folder.</text>
+    <rect x="136" y="160" width="54" height="20" rx="4" fill="#1baf7a"/><text x="163" y="174" font-size="10" fill="#fff" text-anchor="middle">Next</text>
+  </g>
+  <!-- 3 tasks -->
+  <g transform="translate(460,40)">
+    <rect width="200" height="190" rx="8" fill="#fff" stroke="#d0d7de"/>
+    <text x="12" y="26" font-size="11" font-weight="700" fill="#1b1f24">Select Additional Tasks</text>
+    <rect x="12" y="44" width="12" height="12" rx="2" fill="#1baf7a"/><path d="M14.5 50 l3 3 l5 -6" stroke="#fff" stroke-width="2" fill="none"/>
+    <text x="30" y="54" font-size="9" fill="#1b1f24" font-weight="600">Add Akkhara to my keyboards</text>
+    <text x="30" y="66" font-size="8.5" fill="#6b7280">now (switch with Win + Space)</text>
+    <rect x="12" y="80" width="12" height="12" rx="2" fill="#1baf7a"/><path d="M14.5 86 l3 3 l5 -6" stroke="#fff" stroke-width="2" fill="none"/>
+    <text x="30" y="90" font-size="9" fill="#1b1f24">Start menu shortcuts</text>
+    <rect x="124" y="160" width="66" height="20" rx="4" fill="#1baf7a"/><text x="157" y="174" font-size="10" fill="#fff" text-anchor="middle">Install</text>
+  </g>
+  <!-- 4 how to -->
+  <g transform="translate(680,40)">
+    <rect width="200" height="190" rx="8" fill="#fff" stroke="#d0d7de"/>
+    <text x="12" y="26" font-size="11" font-weight="700" fill="#1b1f24">How to type with Akkhara</text>
+    <rect x="12" y="40" width="34" height="20" rx="4" fill="#fff" stroke="#8c959f"/><text x="29" y="54" font-size="9" text-anchor="middle" font-weight="700">Win</text>
+    <text x="52" y="54" font-size="11">+</text>
+    <rect x="62" y="40" width="54" height="20" rx="4" fill="#fff" stroke="#8c959f"/><text x="89" y="54" font-size="9" text-anchor="middle" font-weight="700">Space</text>
+    <text x="12" y="84" font-size="10" fill="#1b1f24">nh jg tv sala rean</text>
+    <line x1="12" y1="88" x2="100" y2="88" stroke="#1b1f24"/>
+    <rect x="12" y="94" width="176" height="22" rx="3" fill="#e3f6ee"/><rect x="12" y="94" width="3" height="22" fill="#1baf7a"/>
+    <text x="22" y="109" font-size="10" fill="#1b1f24">1  ខ្ញុំចង់ទៅសាលារៀន</text>
+    <rect x="124" y="160" width="66" height="20" rx="4" fill="#1baf7a"/><text x="157" y="174" font-size="10" fill="#fff" text-anchor="middle">Finish</text>
+  </g>
+  <g font-size="14" font-weight="700" fill="#fff">
+    <circle cx="30" cy="38" r="13" fill="#1baf7a"/><text x="25" y="43">1</text>
+    <circle cx="250" cy="38" r="13" fill="#1baf7a"/><text x="245" y="43">2</text>
+    <circle cx="470" cy="38" r="13" fill="#1baf7a"/><text x="465" y="43">3</text>
+    <circle cx="690" cy="38" r="13" fill="#1baf7a"/><text x="685" y="43">4</text>
+  </g>
+  <text x="20" y="262" font-size="13" fill="#1b1f24">① Welcome → ② choose the folder → ③ keep "Add Akkhara to my keyboards" ticked → Install → ④ done</text>
+  <text x="20" y="284" font-size="12" fill="#6b7280">"Windows protected your PC"? Click More info → Run anyway (the app is not signed yet).</text>
+</svg>

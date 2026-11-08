@@ -70,7 +70,7 @@ jobs:
             foreach ($f in $crt) { Copy-Item "$sys\$f" $d -ErrorAction Stop }
           }
           New-Item -ItemType Directory -Force stage/model | Out-Null
-          Copy-Item models/akkhara-mini/encoder.int8.onnx, models/akkhara-mini/decoder.int8.onnx, models/akkhara-mini/tokenizer.json stage/model/
+          Copy-Item models/akkhara-mini/encoder.int8.onnx, models/akkhara-mini/decoder.int8.onnx, models/akkhara-mini/tokenizer.json, models/akkhara-mini/abbreviations.tsv stage/model/
           Copy-Item LICENSE stage/LICENSE.txt
           Copy-Item "third_party/onnxruntime-win-x64-$env:ORT_VERSION/ThirdPartyNotices.txt" stage/THIRD_PARTY_NOTICES.txt
           Copy-Item windows-ime/installer/add-keyboard.ps1 stage/
@@ -109,20 +109,40 @@ jobs:
           if ($LASTEXITCODE) { exit 1 }
           Get-ChildItem windows-ime/installer/Output
 
-      - name: Test 4 - install with the installer, then type again
+      - name: Test 4 - install with the installer into a folder of our choice, then type again
         timeout-minutes: 5
         run: |
           Start-Process C:\Windows\System32\regsvr32.exe -ArgumentList "/u", "/s", "`"$PWD\stage\x64\AkkharaIME.dll`"" -Wait
           Start-Process C:\Windows\SysWOW64\regsvr32.exe -ArgumentList "/u", "/s", "`"$PWD\stage\x86\AkkharaIME.dll`"" -Wait
           $setup = (Get-ChildItem windows-ime/installer/Output/*.exe).FullName
-          Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
-          Get-ChildItem -Recurse "C:\Program Files\Akkhara" | Select-Object FullName, Length | Format-Table -AutoSize
+          $dir = "C:\Tools\Akkhara Test"
+          Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=`"$dir`"", "/LOG=`"$PWD\setup.log`"" -Wait
+          Get-ChildItem -Recurse $dir | Select-Object FullName, Length | Format-Table -AutoSize
           $dll = (Get-ItemProperty 'Registry::HKEY_CLASSES_ROOT\CLSID\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}\InprocServer32').'(default)'
           "keyboard DLL in use: $dll"
-          if ($dll -notlike "C:\Program Files\Akkhara\*") { exit 1 }
+          if ($dll -ne "$dir\x64\AkkharaIME.dll") { Get-Content setup.log -Tail 40; exit 1 }
+          "Store apps may read the folder:"; icacls $dir | Select-String "APPLICATION PACKAGE"
+          "keyboard list:"; Get-WinUserLanguageList | Format-List LanguageTag, InputMethodTips
+          Get-ChildItem "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Akkhara" | Select-Object Name
           $p = Start-Process build-x64/Release/akkhara_selftest.exe -NoNewWindow -PassThru -Wait -RedirectStandardOutput selftest2.txt
           Get-Content selftest2.txt -Encoding utf8
-          "self-test exit code: $($p.ExitCode)"
+          if ($p.ExitCode) { exit 1 }
+
+      - name: Test 5 - uninstall removes everything
+        timeout-minutes: 5
+        run: |
+          $dir = "C:\Tools\Akkhara Test"
+          Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+          Start-Sleep 3
+          $left = if (Test-Path $dir) { (Get-ChildItem -Recurse $dir).FullName } else { @() }
+          "files left (deleted at next restart if they were in use): $($left.Count)"; $left
+          $com = Test-Path 'Registry::HKEY_CLASSES_ROOT\CLSID\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}'
+          $tip = Test-Path 'HKLM:\SOFTWARE\Microsoft\CTF\TIP\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}'
+          $inList = [bool](Get-WinUserLanguageList | Where-Object { $_.InputMethodTips -match '57257CD7' })
+          $menu = Test-Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Akkhara"
+          "COM class left: $com | TSF profile left: $tip | still in keyboard list: $inList | Start menu left: $menu"
+          if ($com -or $tip -or $inList -or $menu) { exit 1 }
+          "clean"
 
       - uses: actions/upload-artifact@v4
         with:

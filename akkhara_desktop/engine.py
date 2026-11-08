@@ -54,6 +54,13 @@ class MiniModel:
         cpu = ["CPUExecutionProvider"]
         self.encoder = ort.InferenceSession(str(d / "encoder.int8.onnx"), opts, providers=cpu)
         self.decoder = ort.InferenceSession(str(d / "decoder.int8.onnx"), opts, providers=cpu)
+        # abbreviation → full Khmer name (#2 suggestion: mptc → ក្រសួងប្រៃសណីយ៍…), optional file
+        self.abbreviations: dict[str, str] = {}
+        if (d / "abbreviations.tsv").exists():
+            for line in (d / "abbreviations.tsv").read_text(encoding="utf-8").splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 2 and parts[0] and not line.startswith("#") and parts[0] != "abbreviation":
+                    self.abbreviations[parts[0].strip().lower()] = parts[1].strip()
         vocab = json.loads((d / "tokenizer.json").read_text(encoding="utf-8"))["model"]["vocab"]
         self.vocab: dict[str, int] = vocab
         self.id_to_char = {i: c for c, i in vocab.items()}
@@ -210,4 +217,31 @@ class Engine:
         if not cs:
             return []
         prefix = self._prefix(cs)
-        return [join(prefix, t) for t, _ in self._top(cs[-1], cancelled)]
+        return expand([join(prefix, t) for t, _ in self._top(cs[-1], cancelled)], self.model.abbreviations)
+
+
+TRAIL = ".,!?។៕"
+
+
+def expand_text(text: str, table: dict[str, str]) -> str | None:
+    """The sentence with each known abbreviation replaced by its full Khmer name (None: no change)."""
+    out, hit = "", False
+    for tok in text.split(" "):
+        core = tok.rstrip(TRAIL)
+        full = table.get(core.lower()) if core else None
+        if full:
+            hit = True
+            out = join(out, full) + tok[len(core):]
+        elif tok:
+            out = join(out, tok)
+    return out if hit else None
+
+
+def expand(cands: list[str], table: dict[str, str]) -> list[str]:
+    """Abbreviation kept as typed at #1 (mptc) → the same sentence with the full Khmer name at #2."""
+    if not cands or not table:
+        return cands
+    full = expand_text(cands[0], table)
+    if not full or full in cands:
+        return cands
+    return ([cands[0], full] + [c for c in cands[1:] if c != full])[: max(len(cands), 2)]

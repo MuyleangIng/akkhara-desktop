@@ -72,6 +72,13 @@ void UnregisterProfile() {
         mgr->UnregisterProfile(CLSID_Akkhara, LANGID_KHMER, GUID_Profile, 0);
         mgr->Release();
     }
+    // remove the whole TSF entry of Akkhara (HKLM\SOFTWARE\Microsoft\CTF\TIP\{CLSID}), not only the profile
+    ITfInputProcessorProfiles* profiles = nullptr;
+    if (SUCCEEDED(CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_INPROC_SERVER,
+                                   IID_ITfInputProcessorProfiles, reinterpret_cast<void**>(&profiles)))) {
+        profiles->Unregister(CLSID_Akkhara);
+        profiles->Release();
+    }
 }
 
 HRESULT RegisterCategories(bool add) {

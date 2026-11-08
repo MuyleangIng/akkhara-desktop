@@ -154,6 +154,18 @@ MiniModel::MiniModel(const OrtApi* api, const std::filesystem::path& dir, int th
     check(api_->CreateSession(env_, enc.c_str(), opts_, &encoder_));
     check(api_->CreateSession(env_, dec.c_str(), opts_, &decoder_));
     check(api_->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &mem_));
+    // optional: abbreviation → full Khmer name (abbreviation <TAB> Khmer per line)
+    if (std::ifstream af(dir / "abbreviations.tsv", std::ios::binary); af) {
+        std::string line;
+        while (std::getline(af, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            size_t tab = line.find('\t');
+            if (line.empty() || line[0] == '#' || tab == std::string::npos || line.rfind("abbreviation\t", 0) == 0) continue;
+            std::u32string a = fromUtf8(line.substr(0, tab)), k = fromUtf8(line.substr(tab + 1));
+            for (auto& c : a) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+            abbrevs_[a] = k;
+        }
+    }
     for (auto& [key, id] : readVocab(dir / "tokenizer.json")) {
         std::u32string k = fromUtf8(key);
         if (k.size() == 1) {  // one character per token (special tokens are longer)
@@ -414,7 +426,35 @@ std::vector<std::u32string> LiveEngine::candidates(const std::u32string& text, c
     std::u32string p = prefix(cs);
     std::vector<std::u32string> out;
     for (auto& c : top(cs.back(), cancelled)) out.push_back(join(p, c.text));
-    return out;
+    return expandAbbreviations(out, model_.abbreviations());
+}
+
+std::vector<std::u32string> expandAbbreviations(const std::vector<std::u32string>& cands,
+                                                const std::unordered_map<std::u32string, std::u32string>& table) {
+    if (cands.empty() || table.empty()) return cands;
+    static const std::u32string trail = U".,!?\u17D4\u17D5";  // . , ! ? ។ ៕
+    std::u32string out;
+    bool hit = false;
+    const std::u32string& first = cands[0];
+    size_t i = 0;
+    while (i <= first.size()) {
+        size_t sp = first.find(U' ', i);
+        if (sp == std::u32string::npos) sp = first.size();
+        std::u32string tok = first.substr(i, sp - i);
+        size_t end = tok.size();
+        while (end > 0 && trail.find(tok[end - 1]) != std::u32string::npos) --end;
+        std::u32string core = tok.substr(0, end), low = core;
+        for (auto& c : low) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+        auto it = core.empty() ? table.end() : table.find(low);
+        if (it != table.end()) { hit = true; out = join(out, it->second) + tok.substr(end); }
+        else if (!tok.empty()) out = join(out, tok);
+        i = sp + 1;
+    }
+    if (!hit || std::find(cands.begin(), cands.end(), out) != cands.end()) return cands;
+    std::vector<std::u32string> r{cands[0], out};
+    for (size_t k = 1; k < cands.size() && r.size() < std::max<size_t>(cands.size(), 2); ++k)
+        if (cands[k] != out) r.push_back(cands[k]);
+    return r;
 }
 
 }  // namespace akkhara

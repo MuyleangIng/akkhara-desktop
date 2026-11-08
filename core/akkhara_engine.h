@@ -43,6 +43,9 @@ public:
     MiniModel(const MiniModel&) = delete;
     MiniModel& operator=(const MiniModel&) = delete;
 
+    // abbreviation (lowercase) → full Khmer name, from abbreviations.tsv next to the model (may be empty)
+    const std::unordered_map<std::u32string, std::u32string>& abbreviations() const { return abbrevs_; }
+
     std::u32string greedy(const std::u32string& text, const Cancelled& cancelled = nullptr);
     std::vector<Candidate> topK(const std::u32string& text, int k = 5, int beams = 5,
                                 const Cancelled& cancelled = nullptr);
@@ -68,7 +71,13 @@ private:
     OrtMemoryInfo* mem_ = nullptr;
     std::unordered_map<char32_t, int64_t> vocab_;
     std::unordered_map<int64_t, char32_t> idToChar_;
+    std::unordered_map<std::u32string, std::u32string> abbrevs_;
 };
+
+// Abbreviation kept as typed at #1 (mptc) → the same sentence with the full Khmer name at #2
+// (user 2026-11-08; same logic as akkhara/abbrev.py and the phone's LiveEngine.kt).
+std::vector<std::u32string> expandAbbreviations(const std::vector<std::u32string>& cands,
+                                                const std::unordered_map<std::u32string, std::u32string>& table);
 
 // No space between Khmer pieces; one space next to a Latin word (training target rule).
 std::u32string join(const std::u32string& left, const std::u32string& right);

@@ -1,30 +1,37 @@
-# Akkhara Desktop (test app)
+# Akkhara for Windows and Mac
 
-Type **Sing Khmer** in any app on **Mac or Windows** and get **Khmer**:
-press a hotkey, type `nh jg tv sala rean`, press Enter → `ខ្ញុំចង់ទៅសាលារៀន` is pasted where you were typing.
+Type **Sing Khmer** in any app and get **Khmer**: `nh jg tv sala rean` → **ខ្ញុំចង់ទៅសាលារៀន**
 
 It uses the same AI model as the Akkhara phone keyboard
 ([akkhara-mini](https://huggingface.co/INGMUYLEANG/akkhara-mini), ONNX int8, 18.5 MB) and runs
-**offline on your computer**; nothing you type is sent anywhere.
+**offline on your computer**; nothing you type is sent anywhere. Made by Ing Muyleang.
 
-Two ways to use it:
+## Which file do I download?
 
-| | **Akkhara Keyboard for Windows** (new, real keyboard) | **Akkhara Desktop** (test app, Mac + Windows) |
+From the [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest):
+
+| Your computer | Download | What you get |
 |---|---|---|
-| How | in Windows' keyboard list next to English: **Win + Space** → Akkhara, type anywhere | a hotkey opens a small window, Enter pastes the Khmer |
-| Typing | Latin stays underlined in the app, suggestions under it | in the Akkhara window |
-| Download | `Akkhara-Keyboard-Setup-….exe` | `Akkhara-Desktop-…` |
-
-A real Mac keyboard (in the Mac input menu, Ctrl + Space) is next.
+| **Windows 10 / 11** ⭐ recommended | **`Akkhara-Keyboard-Setup-….exe`** | a **real keyboard** next to English: Win + Space → Akkhara, type in any app |
+| Mac (Apple M-series) | `Akkhara-Desktop-…-mac.zip` | test app: a hotkey opens a small window, Enter pastes the Khmer (a real Mac keyboard is coming) |
+| Windows, no install | `Akkhara-Desktop-…-windows.exe` | the same test app for Windows; use Setup above if you can |
 
 ## Akkhara Keyboard for Windows 10 / 11
 
-### Install
+### Install with Setup (recommended)
 
-1. Download **`Akkhara-Keyboard-Setup-….exe`** from the
-   [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest) and run it.
+![Setup: ① welcome → ② choose the folder → ③ add to my keyboards → Install → ④ how to type](docs/img/win-0-setup.svg)
+
+1. Download **`Akkhara-Keyboard-Setup-….exe`** and open it.
    Windows may say *"Windows protected your PC"* (the app is new and not signed): **More info → Run anyway**.
-2. Keep **"Add Akkhara to my keyboards now"** ticked → **Install**. That's all: skip to *Switch and type*.
+2. **Welcome** → **License** (Apache-2.0) → **Next**.
+3. **Choose the folder.** Keep the default `C:\Program Files\Akkhara` (recommended) or click **Browse** for
+   another one.
+4. Keep **"Add Akkhara to my keyboards now"** ticked (and the Start menu shortcuts if you like) → **Install**.
+5. Setup shows a picture of how to type → **Finish**. Go to *Switch and type* below.
+
+If Setup could not add the keyboard by itself, it tells you and opens Settings: then follow
+*Add it by hand* below (it takes 1 minute).
 
 ### Add it by hand (if you unticked the box, or it is missing)
 
@@ -49,11 +56,16 @@ A real Mac keyboard (in the Mac input menu, Ctrl + Space) is next.
 | Ctrl / Alt shortcuts | work as usual |
 
 Apps that were already open while installing may need a restart to see Akkhara.
-Uninstall: Settings → Apps → *Akkhara Keyboard* → Uninstall.
+
+### Uninstall
+
+Settings → Apps → Installed apps → **Akkhara Keyboard** → Uninstall (or Start menu → Akkhara →
+*Uninstall Akkhara Keyboard*). It removes Akkhara from your keyboard list, unregisters it and deletes
+its folder. Files still used by open apps are deleted at the next restart.
 
 Works in 64-bit and 32-bit apps on Intel/AMD PCs. Windows on ARM: not yet.
 
-## Akkhara Desktop test app: install (no Python needed)
+## Akkhara Desktop test app (Mac, or Windows without installing)
 
 Download from the [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest):
 

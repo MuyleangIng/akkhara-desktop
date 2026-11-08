@@ -1,6 +1,6 @@
 [project]
 name = "akkhara-desktop"
-version = "0.2.0"
+version = "0.3.0"
 description = "Akkhara Desktop (test app): type Sing Khmer, get Khmer in any app on Mac and Windows"
 requires-python = ">=3.10"
 license = "Apache-2.0"
