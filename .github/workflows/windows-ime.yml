@@ -78,8 +78,11 @@ jobs:
 
       - name: Test 2 - register the keyboard
         run: |
-          regsvr32 /s "$PWD\stage\x64\AkkharaIME.dll"; if ($LASTEXITCODE) { exit 1 }
-          C:\Windows\SysWOW64\regsvr32.exe /s "$PWD\stage\x86\AkkharaIME.dll"; if ($LASTEXITCODE) { exit 1 }
+          # regsvr32 is a windowed program: wait for it (-Wait), else the check below runs too early
+          foreach ($r in @(@("C:\Windows\System32\regsvr32.exe", "x64"), @("C:\Windows\SysWOW64\regsvr32.exe", "x86"))) {
+            $p = Start-Process $r[0] -ArgumentList "/s", "`"$PWD\stage\$($r[1])\AkkharaIME.dll`"" -Wait -PassThru
+            "regsvr32 $($r[1]): exit $($p.ExitCode)"; if ($p.ExitCode) { exit 1 }
+          }
           $key = 'HKLM:\SOFTWARE\Microsoft\CTF\TIP\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}\LanguageProfile\0x00000453\{0F2A00C4-EC31-49B5-AA40-89D73AE7F83B}'
           Get-ItemProperty $key | Format-List
           if (-not (Test-Path $key)) { "keyboard profile NOT registered"; exit 1 }
@@ -109,7 +112,8 @@ jobs:
       - name: Test 4 - install with the installer, then type again
         timeout-minutes: 5
         run: |
-          regsvr32 /u /s "$PWD\stage\x64\AkkharaIME.dll"; C:\Windows\SysWOW64\regsvr32.exe /u /s "$PWD\stage\x86\AkkharaIME.dll"
+          Start-Process C:\Windows\System32\regsvr32.exe -ArgumentList "/u", "/s", "`"$PWD\stage\x64\AkkharaIME.dll`"" -Wait
+          Start-Process C:\Windows\SysWOW64\regsvr32.exe -ArgumentList "/u", "/s", "`"$PWD\stage\x86\AkkharaIME.dll`"" -Wait
           $setup = (Get-ChildItem windows-ime/installer/Output/*.exe).FullName
           Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
           Get-ChildItem -Recurse "C:\Program Files\Akkhara" | Select-Object FullName, Length | Format-Table -AutoSize
