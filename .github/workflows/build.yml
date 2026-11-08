@@ -1,0 +1,61 @@
+# Builds the Mac app and the Windows .exe on GitHub's computers.
+# Runs when a version tag (v0.1.0 …) is pushed, and uploads both files to that GitHub Release.
+name: build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install . pyinstaller pytest
+      - name: Download the model (akkhara-mini, open on Hugging Face)
+        run: bash scripts/get_model.sh
+      - name: Tests
+        run: python -m pytest -q
+
+      - name: Build (Mac)
+        if: runner.os == 'macOS'
+        run: |
+          pyinstaller --noconfirm --windowed --name Akkhara --osx-bundle-identifier com.akkhara.desktop \
+            --add-data "models/akkhara-mini:models/akkhara-mini" akkhara_desktop/__main__.py
+          AKKHARA_SMOKE=1 dist/Akkhara.app/Contents/MacOS/Akkhara
+          ditto -c -k --keepParent dist/Akkhara.app "Akkhara-Desktop-${GITHUB_REF_NAME}-mac.zip"
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name Akkhara \
+            --add-data "models/akkhara-mini;models/akkhara-mini" akkhara_desktop/__main__.py
+          AKKHARA_SMOKE=smoke.txt ./dist/Akkhara.exe &
+          for i in $(seq 90); do [ -s smoke.txt ] && break; sleep 2; done
+          cat smoke.txt
+          cp dist/Akkhara.exe "Akkhara-Desktop-${GITHUB_REF_NAME}-windows.exe"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: akkhara-desktop-${{ runner.os }}
+          path: Akkhara-Desktop-*
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: gh release upload "$GITHUB_REF_NAME" Akkhara-Desktop-* --clobber -R "$GITHUB_REPOSITORY"
