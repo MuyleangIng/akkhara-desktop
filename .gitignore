@@ -5,3 +5,5 @@ build/
 dist/
 *.spec
 *.egg-info/
+build/
+third_party/

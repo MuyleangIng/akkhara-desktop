@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <rect width="760" height="380" rx="14" fill="#f3f3f3" stroke="#d0d7de"/>
+  <text x="24" y="36" font-size="15" fill="#555">Settings › Time &amp; language › Language &amp; region › Options</text>
+  <text x="40" y="82" font-size="22" font-weight="600" fill="#1b1f24">ខ្មែរ  Khmer</text>
+  <text x="40" y="122" font-size="16" font-weight="600" fill="#1b1f24">Keyboards</text>
+  <rect x="40" y="134" width="680" height="54" rx="8" fill="#fff" stroke="#e1e4e8"/>
+  <text x="62" y="166" font-size="15" fill="#1b1f24">Installed keyboards</text>
+  <rect x="560" y="144" width="148" height="34" rx="6" fill="#fff" stroke="#1baf7a" stroke-width="2.5"/>
+  <text x="576" y="166" font-size="14" fill="#1b1f24" font-weight="600">Add a keyboard</text>
+  <!-- dropdown list -->
+  <rect x="420" y="192" width="300" height="130" rx="8" fill="#fff" stroke="#d0d7de"/>
+  <text x="440" y="222" font-size="14" fill="#6b7280">Khmer</text>
+  <rect x="428" y="236" width="284" height="38" rx="6" fill="#e3f6ee"/>
+  <rect x="428" y="246" width="4" height="18" rx="2" fill="#1baf7a"/>
+  <text x="440" y="261" font-size="14" fill="#1b1f24" font-weight="600">Akkhara (Sing Khmer)</text>
+  <text x="440" y="302" font-size="14" fill="#6b7280">Khmer (NIDA)</text>
+  <circle cx="742" cy="161" r="14" fill="#1baf7a"/><text x="737" y="167" font-size="15" fill="#fff" font-weight="700">5</text>
+  <circle cx="400" cy="255" r="14" fill="#1baf7a"/><text x="395" y="261" font-size="15" fill="#fff" font-weight="700">6</text>
+  <text x="24" y="362" font-size="13" fill="#6b7280">⑤ Add a keyboard → ⑥ Akkhara (Sing Khmer).  Done: it is now in your keyboard list.</text>
+</svg>

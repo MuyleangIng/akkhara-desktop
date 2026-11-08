@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="400" viewBox="0 0 760 400" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <rect width="760" height="400" rx="14" fill="#f3f3f3" stroke="#d0d7de"/>
+  <!-- keys -->
+  <g font-size="15" font-weight="700" fill="#1b1f24">
+    <rect x="40" y="40" width="64" height="44" rx="8" fill="#fff" stroke="#8c959f"/><text x="56" y="68">Win</text>
+    <text x="116" y="70" font-size="20">+</text>
+    <rect x="140" y="40" width="130" height="44" rx="8" fill="#fff" stroke="#8c959f"/><text x="178" y="68">Space</text>
+  </g>
+  <text x="40" y="110" font-size="13" fill="#6b7280">press again to move down the list</text>
+  <!-- switcher -->
+  <rect x="40" y="124" width="300" height="150" rx="10" fill="#fff" stroke="#d0d7de"/>
+  <text x="60" y="152" font-size="13" fill="#6b7280">Keyboard layout</text>
+  <text x="60" y="186" font-size="14" fill="#1b1f24">ENG   English (US)</text>
+  <rect x="48" y="200" width="284" height="40" rx="6" fill="#e3f6ee"/>
+  <rect x="48" y="211" width="4" height="18" rx="2" fill="#1baf7a"/>
+  <text x="60" y="225" font-size="14" fill="#1b1f24" font-weight="600">KHM   Akkhara (Sing Khmer)</text>
+  <text x="60" y="262" font-size="12" fill="#6b7280">also: taskbar ENG/KHM button, or Alt + Shift</text>
+  <!-- typing demo -->
+  <rect x="380" y="40" width="340" height="234" rx="10" fill="#fff" stroke="#d0d7de"/>
+  <text x="396" y="64" font-size="12" fill="#6b7280">any app (Word, Chrome, Telegram …)</text>
+  <text x="396" y="100" font-size="17" fill="#1b1f24">nh jg tv sala rean</text>
+  <line x1="396" y1="106" x2="548" y2="106" stroke="#1b1f24" stroke-width="1.5"/>
+  <rect x="396" y="116" width="300" height="146" rx="6" fill="#fff" stroke="#d0d7de"/>
+  <rect x="397" y="122" width="298" height="30" fill="#e3f6ee"/><rect x="397" y="122" width="3" height="30" fill="#1baf7a"/>
+  <g font-size="15" fill="#1b1f24">
+    <text x="406" y="143" fill="#6b7280" font-size="12">1</text><text x="424" y="143">ខ្ញុំចង់ទៅសាលារៀន</text>
+    <text x="406" y="173" fill="#6b7280" font-size="12">2</text><text x="424" y="173">ខ្ញុំចង់ធ្វើសាលារៀន</text>
+    <text x="406" y="203" fill="#6b7280" font-size="12">3</text><text x="424" y="203">ខ្ញុំចឹងទៅសាលារៀន</text>
+  </g>
+  <text x="406" y="250" font-size="11" fill="#6b7280">Enter = insert   ↑↓ choose   Shift+Enter / Esc = keep Latin</text>
+  <text x="40" y="320" font-size="15" fill="#1b1f24" font-weight="600">⑦ Win + Space → Akkhara.   ⑧ Type Sing Khmer, press Enter → ខ្ញុំចង់ទៅសាលារៀន</text>
+  <text x="40" y="350" font-size="13" fill="#6b7280">Back to English: Win + Space again.  Apps that were open before installing may need a restart.</text>
+</svg>

@@ -7,10 +7,53 @@ It uses the same AI model as the Akkhara phone keyboard
 ([akkhara-mini](https://huggingface.co/INGMUYLEANG/akkhara-mini), ONNX int8, 18.5 MB) and runs
 **offline on your computer**; nothing you type is sent anywhere.
 
-> This is a **test app**, not yet a real system keyboard. Step 2 = a real Mac keyboard (Swift),
-> step 3 = a real Windows keyboard.
+Two ways to use it:
 
-## Install (no Python needed)
+| | **Akkhara Keyboard for Windows** (new, real keyboard) | **Akkhara Desktop** (test app, Mac + Windows) |
+|---|---|---|
+| How | in Windows' keyboard list next to English: **Win + Space** → Akkhara, type anywhere | a hotkey opens a small window, Enter pastes the Khmer |
+| Typing | Latin stays underlined in the app, suggestions under it | in the Akkhara window |
+| Download | `Akkhara-Keyboard-Setup-….exe` | `Akkhara-Desktop-…` |
+
+A real Mac keyboard (in the Mac input menu, Ctrl + Space) is next.
+
+## Akkhara Keyboard for Windows 10 / 11
+
+### Install
+
+1. Download **`Akkhara-Keyboard-Setup-….exe`** from the
+   [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest) and run it.
+   Windows may say *"Windows protected your PC"* (the app is new and not signed): **More info → Run anyway**.
+2. Keep **"Add Akkhara to my keyboards now"** ticked → **Install**. That's all: skip to *Switch and type*.
+
+### Add it by hand (if you unticked the box, or it is missing)
+
+| | |
+|---|---|
+| ![Settings → Time & language → Language & region](docs/img/win-1-settings.svg) | **Win + I** opens Settings → ① **Time & language** → ② **Language & region** |
+| ![Khmer → ··· → Language options](docs/img/win-2-khmer-options.svg) | No Khmer in the list? **Add a language** → *Khmer*. Then ③ **···** next to Khmer → ④ **Language options** |
+| ![Add a keyboard → Akkhara (Sing Khmer)](docs/img/win-3-add-keyboard.svg) | Under *Keyboards*: ⑤ **Add a keyboard** → ⑥ **Akkhara (Sing Khmer)** |
+
+### Switch and type
+
+![Win + Space → Akkhara, then type Sing Khmer](docs/img/win-4-switch-and-type.svg)
+
+| Key | What it does |
+|---|---|
+| **Win + Space** (or the ENG / KHM button on the taskbar, or Alt + Shift) | switch between English and Akkhara |
+| type Sing Khmer | the Latin stays underlined; the top-5 Khmer appear under it |
+| **Enter** | insert the highlighted Khmer |
+| **↑ / ↓**, **Tab**, or click | choose another suggestion |
+| **Shift + Enter** or **Esc** | keep exactly the Latin you typed |
+| **Backspace** | edit what you typed |
+| Ctrl / Alt shortcuts | work as usual |
+
+Apps that were already open while installing may need a restart to see Akkhara.
+Uninstall: Settings → Apps → *Akkhara Keyboard* → Uninstall.
+
+Works in 64-bit and 32-bit apps on Intel/AMD PCs. Windows on ARM: not yet.
+
+## Akkhara Desktop test app: install (no Python needed)
 
 Download from the [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest):
 

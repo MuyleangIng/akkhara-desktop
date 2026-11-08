@@ -1,0 +1,129 @@
+# Builds the REAL Windows keyboard (TSF input method) on GitHub's Windows computers:
+#   1. C++ engine test: must give the same top-5 as the Python engine (tests/data/expected.tsv)
+#   2. keyboard DLLs for 64-bit and 32-bit apps
+#   3. register + self-test (types "nh jg tv sala rean" + Enter into a text box)
+#   4. installer Akkhara-Keyboard-Setup-<version>.exe (attached to the release on a v* tag)
+name: windows-keyboard
+
+on:
+  push:
+    branches: [main, "dev/**"]
+    tags: ["v*"]
+    paths: ["windows-ime/**", "core/**", "tests/data/**", ".github/workflows/windows-ime.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ORT_VERSION: "1.22.0"  # last ONNX Runtime with a 32-bit Windows build
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the model (akkhara-mini) and ONNX Runtime
+        run: |
+          bash scripts/get_model.sh
+          foreach ($a in "x64", "x86") {
+            $n = "onnxruntime-win-$a-$env:ORT_VERSION"
+            Invoke-WebRequest "https://github.com/microsoft/onnxruntime/releases/download/v$env:ORT_VERSION/$n.zip" -OutFile "$n.zip"
+            Expand-Archive "$n.zip" -DestinationPath third_party
+          }
+          Get-ChildItem third_party
+
+      - name: Build (64-bit and 32-bit)
+        run: |
+          cmake -S windows-ime -B build-x64 -A x64 -DORT_DIR="$PWD/third_party/onnxruntime-win-x64-$env:ORT_VERSION"
+          cmake --build build-x64 --config Release
+          cmake -S windows-ime -B build-x86 -A Win32 -DORT_DIR="$PWD/third_party/onnxruntime-win-x86-$env:ORT_VERSION"
+          cmake --build build-x86 --config Release
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test 1 - C++ engine gives the same answers as Python (same ONNX Runtime)
+        run: |
+          python -m pip install -q "onnxruntime==$env:ORT_VERSION" numpy
+          Copy-Item "third_party/onnxruntime-win-x64-$env:ORT_VERSION/lib/onnxruntime.dll" build-x64/Release/
+          cmd /c "build-x64\Release\akkhara_cli.exe models\akkhara-mini < tests\data\inputs.txt > cpp.tsv"
+          python tests/compare_engine.py models/akkhara-mini tests/data/inputs.txt cpp.tsv
+
+      - name: Stage the install folder
+        run: |
+          # x64 files + the 64-bit C++ runtime (System32); x86 files + the 32-bit one (SysWOW64)
+          foreach ($p in @(@("x64", "C:\Windows\System32", "build-x64"), @("x86", "C:\Windows\SysWOW64", "build-x86"))) {
+            $a, $sys, $b = $p
+            $d = "stage/$a"; New-Item -ItemType Directory -Force $d | Out-Null
+            Copy-Item "$b/Release/AkkharaIME.dll" $d
+            # ONNX Runtime, renamed so it never clashes with Windows' own onnxruntime.dll
+            Copy-Item "third_party/onnxruntime-win-$a-$env:ORT_VERSION/lib/onnxruntime.dll" "$d/akkhara-ort.dll"
+            # the Visual C++ runtime ONNX Runtime needs, next to it (app-local, so no separate install)
+            $crt = @("msvcp140.dll", "vcruntime140.dll") + $(if ($a -eq "x64") { @("vcruntime140_1.dll") } else { @() })
+            foreach ($f in $crt) { Copy-Item "$sys\$f" $d -ErrorAction Stop }
+          }
+          New-Item -ItemType Directory -Force stage/model | Out-Null
+          Copy-Item models/akkhara-mini/encoder.int8.onnx, models/akkhara-mini/decoder.int8.onnx, models/akkhara-mini/tokenizer.json stage/model/
+          Copy-Item LICENSE stage/LICENSE.txt
+          Copy-Item "third_party/onnxruntime-win-x64-$env:ORT_VERSION/ThirdPartyNotices.txt" stage/THIRD_PARTY_NOTICES.txt
+          Copy-Item windows-ime/installer/add-keyboard.ps1 stage/
+          Get-ChildItem -Recurse stage | Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Test 2 - register the keyboard
+        run: |
+          regsvr32 /s "$PWD\stage\x64\AkkharaIME.dll"; if ($LASTEXITCODE) { exit 1 }
+          C:\Windows\SysWOW64\regsvr32.exe /s "$PWD\stage\x86\AkkharaIME.dll"; if ($LASTEXITCODE) { exit 1 }
+          $key = 'HKLM:\SOFTWARE\Microsoft\CTF\TIP\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}\LanguageProfile\0x00000453\{0F2A00C4-EC31-49B5-AA40-89D73AE7F83B}'
+          Get-ItemProperty $key | Format-List
+          if (-not (Test-Path $key)) { "keyboard profile NOT registered"; exit 1 }
+          "registered: Khmer -> Akkhara (Sing Khmer)"
+          pwsh -File stage/add-keyboard.ps1 -Tip '0453:{57257CD7-B2DD-47D1-94E1-2CCC9766838A}{0F2A00C4-EC31-49B5-AA40-89D73AE7F83B}'
+          Get-WinUserLanguageList | Format-List LanguageTag, InputMethodTips
+
+      - name: Test 3 - type with the keyboard (self-test)
+        timeout-minutes: 3
+        continue-on-error: true  # needs an interactive desktop; GitHub's may not allow simulated typing
+        run: |
+          Copy-Item build-x64/Release/akkhara_selftest.exe stage/x64/
+          $p = Start-Process stage/x64/akkhara_selftest.exe -NoNewWindow -PassThru -Wait -RedirectStandardOutput selftest.txt
+          Get-Content selftest.txt -Encoding utf8
+          Remove-Item stage/x64/akkhara_selftest.exe
+          exit $p.ExitCode
+
+      - name: Build the installer
+        run: |
+          $ver = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0-dev' }
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
+          & $iscc /Qp "/DVersion=$ver" "/DStage=$PWD\stage" windows-ime\installer\akkhara.iss
+          if ($LASTEXITCODE) { exit 1 }
+          Get-ChildItem windows-ime/installer/Output
+
+      - name: Test 4 - install with the installer, then type again
+        timeout-minutes: 5
+        run: |
+          regsvr32 /u /s "$PWD\stage\x64\AkkharaIME.dll"; C:\Windows\SysWOW64\regsvr32.exe /u /s "$PWD\stage\x86\AkkharaIME.dll"
+          $setup = (Get-ChildItem windows-ime/installer/Output/*.exe).FullName
+          Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+          Get-ChildItem -Recurse "C:\Program Files\Akkhara" | Select-Object FullName, Length | Format-Table -AutoSize
+          $dll = (Get-ItemProperty 'Registry::HKEY_CLASSES_ROOT\CLSID\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}\InprocServer32').'(default)'
+          "keyboard DLL in use: $dll"
+          if ($dll -notlike "C:\Program Files\Akkhara\*") { exit 1 }
+          $p = Start-Process build-x64/Release/akkhara_selftest.exe -NoNewWindow -PassThru -Wait -RedirectStandardOutput selftest2.txt
+          Get-Content selftest2.txt -Encoding utf8
+          "self-test exit code: $($p.ExitCode)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: akkhara-keyboard-windows
+          path: windows-ime/installer/Output/*.exe
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: gh release upload "$env:GITHUB_REF_NAME" (Get-ChildItem windows-ime/installer/Output/*.exe).FullName --clobber -R "$env:GITHUB_REPOSITORY"
