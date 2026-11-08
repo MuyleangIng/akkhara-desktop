@@ -203,6 +203,10 @@ class Engine:
 
     def quick(self, text: str, cancelled: Cancelled = _never) -> str:
         """#1 only, greedy for the last chunk (fast, shown first while typing)."""
+        special = with_abbreviations(text, self.model.abbreviations, lambda s: [self._quick(s, cancelled)], 1)
+        return special[0] if special is not None else self._quick(text, cancelled)
+
+    def _quick(self, text: str, cancelled: Cancelled = _never) -> str:
         cs = self.chunks(text)
         if not cs:
             return ""
@@ -212,36 +216,68 @@ class Engine:
         return join(self._prefix(cs), last)
 
     def candidates(self, text: str, cancelled: Cancelled = _never) -> list[str]:
-        """Top-5 for the whole text: best finished chunks + each candidate of the last chunk."""
+        """Top-5 for the whole text: best finished chunks + each candidate of the last chunk.
+        Known abbreviations never reach the model: as typed #1, full Khmer name #2."""
+        special = with_abbreviations(text, self.model.abbreviations, lambda s: self._candidates(s, cancelled), 5)
+        return special if special is not None else self._candidates(text, cancelled)
+
+    def _candidates(self, text: str, cancelled: Cancelled = _never) -> list[str]:
         cs = self.chunks(text)
         if not cs:
             return []
         prefix = self._prefix(cs)
-        return expand([join(prefix, t) for t, _ in self._top(cs[-1], cancelled)], self.model.abbreviations)
+        return [join(prefix, t) for t, _ in self._top(cs[-1], cancelled)]
 
 
 TRAIL = ".,!?។៕"
 
 
-def expand_text(text: str, table: dict[str, str]) -> str | None:
-    """The sentence with each known abbreviation replaced by its full Khmer name (None: no change)."""
-    out, hit = "", False
-    for tok in text.split(" "):
-        core = tok.rstrip(TRAIL)
-        full = table.get(core.lower()) if core else None
-        if full:
-            hit = True
-            out = join(out, full) + tok[len(core):]
-        elif tok:
-            out = join(out, tok)
-    return out if hit else None
+def with_abbreviations(text: str, table: dict[str, str], top_fn, k: int = 5) -> list[str] | None:
+    """Top-k for text with known abbreviations, which are NOT sent to the model (alone, the model turned
+    "mptc" into a wrong ministry): #1 other words + abbreviation as typed, #2 the same with the full Khmer
+    name, then other candidates of the last plain piece. None when there is no known abbreviation.
+    Same logic as akkhara/abbrev.py (Akkhara repo), LiveEngine.kt and core/akkhara_engine.cpp."""
+    if not table:
+        return None
+    segs: list[tuple[bool, str]] = []
+    cur: list[str] = []
+    for w in text.split():
+        core = w.rstrip(TRAIL)
+        if core and core.lower() in table:
+            if cur:
+                segs.append((False, " ".join(cur)))
+                cur = []
+            segs.append((True, w))
+        else:
+            cur.append(w)
+    if cur:
+        segs.append((False, " ".join(cur)))
+    if not any(a for a, _ in segs):
+        return None
+    results = [[] if a else top_fn(v) for a, v in segs]
+    plain = [i for i, (a, _) in enumerate(segs) if not a]
+    last = plain[-1] if plain else None
 
+    def build(alt: int = 0, full: bool = False) -> str:
+        out = ""
+        for i, (a, v) in enumerate(segs):
+            if a:
+                core = v.rstrip(TRAIL)
+                piece = table[core.lower()] + v[len(core):] if full else v
+                if full:  # 'theanakear aba': do not repeat ធនាគារ already written
+                    piece = next((piece[n:] for n in range(len(piece) - 1, 2, -1) if out.endswith(piece[:n])), piece)
+            else:
+                r = results[i]
+                j = alt if i == last else 0
+                piece = r[j] if j < len(r) else (r[0] if r else v)
+            out = join(out, piece)
+        return out
 
-def expand(cands: list[str], table: dict[str, str]) -> list[str]:
-    """Abbreviation kept as typed at #1 (mptc) → the same sentence with the full Khmer name at #2."""
-    if not cands or not table:
-        return cands
-    full = expand_text(cands[0], table)
-    if not full or full in cands:
-        return cands
-    return ([cands[0], full] + [c for c in cands[1:] if c != full])[: max(len(cands), 2)]
+    cands = [build(), build(full=True)]
+    for j in range(1, len(results[last]) if last is not None else 0):
+        c = build(alt=j)
+        if c not in cands:
+            cands.append(c)
+        if len(cands) >= k:
+            break
+    return cands[:k]

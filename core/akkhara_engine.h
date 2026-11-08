@@ -74,10 +74,14 @@ private:
     std::unordered_map<std::u32string, std::u32string> abbrevs_;
 };
 
-// Abbreviation kept as typed at #1 (mptc) → the same sentence with the full Khmer name at #2
-// (user 2026-11-08; same logic as akkhara/abbrev.py and the phone's LiveEngine.kt).
-std::vector<std::u32string> expandAbbreviations(const std::vector<std::u32string>& cands,
-                                                const std::unordered_map<std::u32string, std::u32string>& table);
+// Top-k for text with known abbreviations, which are NOT sent to the model (alone, the model turned
+// "mptc" into a wrong ministry): #1 other words from the model + abbreviation as typed, #2 the same with
+// the full Khmer name, then other candidates of the last plain piece. Returns false (out untouched)
+// when there is no known abbreviation. Same logic as akkhara/abbrev.py and the phone's LiveEngine.kt.
+bool withAbbreviations(const std::u32string& text,
+                       const std::unordered_map<std::u32string, std::u32string>& table, size_t k,
+                       const std::function<std::vector<std::u32string>(const std::u32string&)>& topFn,
+                       std::vector<std::u32string>& out);
 
 // No space between Khmer pieces; one space next to a Latin word (training target rule).
 std::u32string join(const std::u32string& left, const std::u32string& right);
@@ -92,6 +96,8 @@ public:
 
 private:
     std::vector<Candidate> top(const std::u32string& chunk, const Cancelled& cancelled = nullptr);
+    std::u32string quickPlain(const std::u32string& text, const Cancelled& cancelled);
+    std::vector<std::u32string> candidatesPlain(const std::u32string& text, const Cancelled& cancelled);
     std::u32string prefix(const std::vector<std::u32string>& cs);
     bool cached(const std::u32string& chunk, std::vector<Candidate>& out);
 

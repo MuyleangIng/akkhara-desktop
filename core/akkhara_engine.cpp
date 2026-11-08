@@ -412,6 +412,15 @@ std::u32string LiveEngine::prefix(const std::vector<std::u32string>& cs) {
 }
 
 std::u32string LiveEngine::quick(const std::u32string& text, const Cancelled& cancelled) {
+    std::vector<std::u32string> special;
+    if (withAbbreviations(text, model_.abbreviations(), 1,
+                          [&](const std::u32string& s) { return std::vector<std::u32string>{quickPlain(s, cancelled)}; },
+                          special))
+        return special.empty() ? U"" : special[0];
+    return quickPlain(text, cancelled);
+}
+
+std::u32string LiveEngine::quickPlain(const std::u32string& text, const Cancelled& cancelled) {
     auto cs = chunks(text);
     if (cs.empty()) return U"";
     std::vector<Candidate> known;
@@ -421,40 +430,86 @@ std::u32string LiveEngine::quick(const std::u32string& text, const Cancelled& ca
 }
 
 std::vector<std::u32string> LiveEngine::candidates(const std::u32string& text, const Cancelled& cancelled) {
+    // known abbreviations (mptc, rupp …) never reach the model: as typed #1, full Khmer name #2
+    std::vector<std::u32string> special;
+    if (withAbbreviations(text, model_.abbreviations(), 5,
+                          [&](const std::u32string& s) { return candidatesPlain(s, cancelled); }, special))
+        return special;
+    return candidatesPlain(text, cancelled);
+}
+
+std::vector<std::u32string> LiveEngine::candidatesPlain(const std::u32string& text, const Cancelled& cancelled) {
     auto cs = chunks(text);
     if (cs.empty()) return {};
     std::u32string p = prefix(cs);
     std::vector<std::u32string> out;
     for (auto& c : top(cs.back(), cancelled)) out.push_back(join(p, c.text));
-    return expandAbbreviations(out, model_.abbreviations());
+    return out;
 }
 
-std::vector<std::u32string> expandAbbreviations(const std::vector<std::u32string>& cands,
-                                                const std::unordered_map<std::u32string, std::u32string>& table) {
-    if (cands.empty() || table.empty()) return cands;
+bool withAbbreviations(const std::u32string& text,
+                       const std::unordered_map<std::u32string, std::u32string>& table, size_t k,
+                       const std::function<std::vector<std::u32string>(const std::u32string&)>& topFn,
+                       std::vector<std::u32string>& out) {
+    if (table.empty()) return false;
     static const std::u32string trail = U".,!?\u17D4\u17D5";  // . , ! ? ។ ៕
-    std::u32string out;
-    bool hit = false;
-    const std::u32string& first = cands[0];
-    size_t i = 0;
-    while (i <= first.size()) {
-        size_t sp = first.find(U' ', i);
-        if (sp == std::u32string::npos) sp = first.size();
-        std::u32string tok = first.substr(i, sp - i);
-        size_t end = tok.size();
-        while (end > 0 && trail.find(tok[end - 1]) != std::u32string::npos) --end;
-        std::u32string core = tok.substr(0, end), low = core;
-        for (auto& c : low) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
-        auto it = core.empty() ? table.end() : table.find(low);
-        if (it != table.end()) { hit = true; out = join(out, it->second) + tok.substr(end); }
-        else if (!tok.empty()) out = join(out, tok);
-        i = sp + 1;
-    }
-    if (!hit || std::find(cands.begin(), cands.end(), out) != cands.end()) return cands;
-    std::vector<std::u32string> r{cands[0], out};
-    for (size_t k = 1; k < cands.size() && r.size() < std::max<size_t>(cands.size(), 2); ++k)
-        if (cands[k] != out) r.push_back(cands[k]);
-    return r;
+    auto coreOf = [&](const std::u32string& w) {
+        size_t e = w.size();
+        while (e > 0 && trail.find(w[e - 1]) != std::u32string::npos) --e;
+        return w.substr(0, e);
+    };
+    auto lower = [](std::u32string s) { for (auto& c : s) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a'; return s; };
+    // cut the text around the abbreviations: (isAbbreviation, text)
+    std::vector<std::pair<bool, std::u32string>> segs;
+    std::u32string cur, w;
+    auto flushWord = [&]() {
+        if (w.empty()) return;
+        std::u32string core = coreOf(w);
+        if (!core.empty() && table.count(lower(core))) {
+            if (!cur.empty()) { segs.emplace_back(false, cur); cur.clear(); }
+            segs.emplace_back(true, w);
+        } else cur += (cur.empty() ? U"" : U" ") + w;
+        w.clear();
+    };
+    for (char32_t c : text) { if (isSpace(c)) flushWord(); else w += c; }
+    flushWord();
+    if (!cur.empty()) segs.emplace_back(false, cur);
+    bool any = false;
+    for (auto& sg : segs) any = any || sg.first;
+    if (!any) return false;
+
+    std::vector<std::vector<std::u32string>> results(segs.size());
+    int last = -1;
+    for (size_t i = 0; i < segs.size(); ++i)
+        if (!segs[i].first) { results[i] = topFn(segs[i].second); last = int(i); }
+    auto build = [&](size_t alt, bool full) {
+        std::u32string o;
+        for (size_t i = 0; i < segs.size(); ++i) {
+            std::u32string piece;
+            if (segs[i].first) {
+                const std::u32string& v = segs[i].second;
+                std::u32string core = coreOf(v);
+                piece = full ? table.at(lower(core)) + v.substr(core.size()) : v;
+                if (full)  // 'theanakear aba': do not repeat ធនាគារ already written (≥ 3 letters)
+                    for (size_t n = piece.size() - 1; n > 2; --n)
+                        if (o.size() >= n && o.compare(o.size() - n, n, piece, 0, n) == 0) { piece = piece.substr(n); break; }
+            } else {
+                const auto& r = results[i];
+                size_t j = (int(i) == last) ? alt : 0;
+                piece = j < r.size() ? r[j] : (r.empty() ? segs[i].second : r[0]);
+            }
+            o = join(o, piece);
+        }
+        return o;
+    };
+    out = {build(0, false), build(0, true)};
+    if (last >= 0)
+        for (size_t j = 1; j < results[last].size() && out.size() < k; ++j) {
+            auto c = build(j, false);
+            if (std::find(out.begin(), out.end(), c) == out.end()) out.push_back(c);
+        }
+    if (out.size() > k) out.resize(k);
+    return true;
 }
 
 }  // namespace akkhara
