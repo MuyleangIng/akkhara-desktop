@@ -57,13 +57,21 @@ If Setup could not add the keyboard by itself, it tells you and opens Settings: 
 
 Apps that were already open while installing may need a restart to see Akkhara.
 
-### Uninstall
+### Update, uninstall, install again (no restart)
 
-Settings → Apps → Installed apps → **Akkhara Keyboard** → Uninstall (or Start menu → Akkhara →
-*Uninstall Akkhara Keyboard*). It removes Akkhara from your keyboard list, unregisters it and deletes
-its folder. Files still used by open apps are deleted at the next restart.
+![Install → use → update → uninstall, no restart](docs/img/win-lifecycle.svg)
 
-Works in 64-bit and 32-bit apps on Intel/AMD PCs. Windows on ARM: not yet.
+- **Update:** Start menu → Akkhara → **Check for updates** (or the weekly check, if you ticked it in
+  Setup). It compares your version with the [newest GitHub release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest)
+  and installs it over the old one. You can also just run a newer `Akkhara-Keyboard-Setup-….exe`.
+  Only this check goes online; the keyboard itself never does.
+- **Uninstall:** Settings → Apps → Installed apps → **Akkhara Keyboard** → Uninstall (or Start menu →
+  Akkhara → *Uninstall Akkhara Keyboard*). It removes Akkhara from your keyboard list, unregisters it,
+  removes the update check and deletes its folder.
+- **No restart:** open apps keep the keyboard file loaded, so Windows cannot delete it right away.
+  Setup moves such files to `Windows\Temp\Akkhara-removed` (Windows deletes them at your next normal
+  restart), so neither an update nor an uninstall asks you to restart.
+- **Install again** any time with the same Setup.
 
 ## Akkhara Desktop test app (Mac, or Windows without installing)
 

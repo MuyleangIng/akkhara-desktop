@@ -73,7 +73,7 @@ jobs:
           Copy-Item models/akkhara-mini/encoder.int8.onnx, models/akkhara-mini/decoder.int8.onnx, models/akkhara-mini/tokenizer.json, models/akkhara-mini/abbreviations.tsv stage/model/
           Copy-Item LICENSE stage/LICENSE.txt
           Copy-Item "third_party/onnxruntime-win-x64-$env:ORT_VERSION/ThirdPartyNotices.txt" stage/THIRD_PARTY_NOTICES.txt
-          Copy-Item windows-ime/installer/add-keyboard.ps1 stage/
+          Copy-Item windows-ime/installer/add-keyboard.ps1, windows-ime/installer/update.ps1 stage/
           Get-ChildItem -Recurse stage | Select-Object FullName, Length | Format-Table -AutoSize
 
       - name: Test 2 - register the keyboard
@@ -124,25 +124,48 @@ jobs:
           "Store apps may read the folder:"; icacls $dir | Select-String "APPLICATION PACKAGE"
           "keyboard list:"; Get-WinUserLanguageList | Format-List LanguageTag, InputMethodTips
           Get-ChildItem "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Akkhara" | Select-Object Name
+          "weekly update task:"; schtasks /Query /TN "Akkhara update check" /FO LIST | Select-String "TaskName|Next Run|Status"
+          if ($LASTEXITCODE) { "update task missing"; exit 1 }
+          # updater logic (no dialog): the installed version must be found and GitHub must answer
+          $v = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{083E06E0-49D0-45DB-BC58-17EFD302DAD8}_is1').DisplayVersion
+          $rel = Invoke-RestMethod "https://api.github.com/repos/${{ github.repository }}/releases/latest" -Headers @{ 'User-Agent' = 'Akkhara-ci' }
+          "installed version: $v | latest GitHub release: $($rel.tag_name) | Setup asset: $(($rel.assets | Where-Object name -like 'Akkhara-Keyboard-Setup-*').name)"
           $p = Start-Process build-x64/Release/akkhara_selftest.exe -NoNewWindow -PassThru -Wait -RedirectStandardOutput selftest2.txt
           Get-Content selftest2.txt -Encoding utf8
           if ($p.ExitCode) { exit 1 }
 
-      - name: Test 5 - uninstall removes everything
-        timeout-minutes: 5
+      - name: Test 5 - update and uninstall while an app uses the keyboard (no restart)
+        timeout-minutes: 6
         run: |
           $dir = "C:\Tools\Akkhara Test"
-          Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+          # an "open app" that has the keyboard DLLs loaded (they cannot be deleted while loaded)
+          $hold = Start-Process pwsh -ArgumentList "-NoProfile", "-File", "windows-ime/installer/test-hold-dll.ps1", "-Dir", "`"$dir`"" -PassThru -WindowStyle Hidden
+          Start-Sleep 5
+          # 1) install again over it (update) while the DLLs are in use
+          $setup = (Get-ChildItem windows-ime/installer/Output/*.exe).FullName
+          Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=`"$dir`"", "/LOG=`"$PWD\update.log`"" -Wait
+          $u = Select-String -Path update.log -Pattern "restart" | ForEach-Object { $_.Line }
+          "update log (restart lines):"; $u
+          if ($u -match "Need to restart Windows\? Yes") { "UPDATE ASKED FOR A RESTART"; exit 1 }
+          # 2) uninstall while the DLLs are still in use
+          Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$PWD\uninstall.log`"" -Wait
           Start-Sleep 3
-          $left = if (Test-Path $dir) { (Get-ChildItem -Recurse $dir).FullName } else { @() }
-          "files left (deleted at next restart if they were in use): $($left.Count)"; $left
+          $r = Select-String -Path uninstall.log -Pattern "restart" | ForEach-Object { $_.Line }
+          "uninstall log (restart lines):"; $r
+          Stop-Process -Id $hold.Id -Force -ErrorAction SilentlyContinue
+          $left = Test-Path $dir
           $com = Test-Path 'Registry::HKEY_CLASSES_ROOT\CLSID\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}'
           $tip = Test-Path 'HKLM:\SOFTWARE\Microsoft\CTF\TIP\{57257CD7-B2DD-47D1-94E1-2CCC9766838A}'
           $inList = [bool](Get-WinUserLanguageList | Where-Object { $_.InputMethodTips -match '57257CD7' })
           $menu = Test-Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Akkhara"
-          "COM class left: $com | TSF profile left: $tip | still in keyboard list: $inList | Start menu left: $menu"
-          if ($com -or $tip -or $inList -or $menu) { exit 1 }
-          "clean"
+          schtasks /Query /TN "Akkhara update check" 2>$null | Out-Null; $task = ($LASTEXITCODE -eq 0); $global:LASTEXITCODE = 0
+          "update task left: $task"
+          if ($task) { exit 1 }
+          "app folder left: $left | COM class left: $com | TSF profile left: $tip | still in keyboard list: $inList | Start menu left: $menu"
+          "moved in-use files (deleted at next restart):"; Get-ChildItem C:\Windows\Temp\Akkhara-removed -ErrorAction SilentlyContinue | Select-Object Name
+          if ($r -match "Need to restart Windows\? Yes") { "UNINSTALL ASKED FOR A RESTART"; exit 1 }
+          if ($left -or $com -or $tip -or $inList -or $menu) { exit 1 }
+          "clean, no restart"
 
       - uses: actions/upload-artifact@v4
         with:

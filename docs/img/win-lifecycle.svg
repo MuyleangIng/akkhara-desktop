@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="430" viewBox="0 0 980 430" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+  </defs>
+  <rect width="980" height="430" rx="16" fill="#f6f8fb" stroke="#d0d7de"/>
+  <text x="28" y="40" font-size="20" font-weight="700" fill="#0f172a">Akkhara on Windows: install → use → update → uninstall</text>
+  <text x="28" y="62" font-size="13" fill="#64748b">No step needs a restart. The keyboard itself never goes online; only the update check does.</text>
+
+  <!-- 1 install -->
+  <g transform="translate(28,90)">
+    <rect width="210" height="230" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <circle cx="26" cy="28" r="15" fill="#2563eb"/><text x="26" y="34" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Install</text>
+    <text x="16" y="66" font-size="12.5" fill="#334155">Run Setup.exe</text>
+    <text x="16" y="88" font-size="12.5" fill="#334155">• choose the folder</text>
+    <text x="16" y="108" font-size="12.5" fill="#334155">• adds Akkhara to</text>
+    <text x="28" y="126" font-size="12.5" fill="#334155">your keyboards</text>
+    <text x="16" y="146" font-size="12.5" fill="#334155">• weekly update check</text>
+    <text x="28" y="164" font-size="12.5" fill="#334155">(optional)</text>
+    <rect x="16" y="184" width="178" height="30" rx="7" fill="#e3f6ee"/><text x="105" y="204" font-size="12" fill="#127a55" text-anchor="middle" font-weight="600">no restart</text>
+  </g>
+  <!-- 2 use -->
+  <g transform="translate(266,90)">
+    <rect width="210" height="230" rx="12" fill="#fff" stroke="#1baf7a" stroke-width="2"/>
+    <circle cx="26" cy="28" r="15" fill="#1baf7a"/><text x="26" y="34" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+    <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Use</text>
+    <rect x="16" y="52" width="44" height="26" rx="6" fill="#fff" stroke="#8c959f"/><text x="38" y="70" font-size="12" text-anchor="middle" font-weight="700">Win</text>
+    <text x="66" y="70" font-size="14">+</text>
+    <rect x="80" y="52" width="70" height="26" rx="6" fill="#fff" stroke="#8c959f"/><text x="115" y="70" font-size="12" text-anchor="middle" font-weight="700">Space</text>
+    <text x="16" y="104" font-size="12.5" fill="#334155">→ Akkhara (Sing Khmer)</text>
+    <text x="16" y="132" font-size="13" fill="#0f172a">nh jg tv sala rean</text>
+    <line x1="16" y1="137" x2="132" y2="137" stroke="#0f172a"/>
+    <text x="16" y="164" font-size="15" fill="#0f172a">ខ្ញុំចង់ទៅសាលារៀន</text>
+    <text x="16" y="200" font-size="12" fill="#64748b">offline · any app</text>
+  </g>
+  <!-- 3 update -->
+  <g transform="translate(504,90)">
+    <rect width="210" height="230" rx="12" fill="#fff" stroke="#f59e0b" stroke-width="2"/>
+    <circle cx="26" cy="28" r="15" fill="#f59e0b"/><text x="26" y="34" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+    <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Update</text>
+    <text x="16" y="66" font-size="12.5" fill="#334155">Start → Akkhara →</text>
+    <text x="16" y="84" font-size="12.5" fill="#334155" font-weight="600">Check for updates</text>
+    <text x="16" y="104" font-size="12.5" fill="#334155">(or the weekly check)</text>
+    <text x="16" y="128" font-size="12.5" fill="#334155">• compares with the newest</text>
+    <text x="28" y="146" font-size="12.5" fill="#334155">GitHub release</text>
+    <text x="16" y="166" font-size="12.5" fill="#334155">• installs over the old one</text>
+    <rect x="16" y="184" width="178" height="30" rx="7" fill="#e3f6ee"/><text x="105" y="204" font-size="12" fill="#127a55" text-anchor="middle" font-weight="600">no restart</text>
+  </g>
+  <!-- 4 uninstall -->
+  <g transform="translate(742,90)">
+    <rect width="210" height="230" rx="12" fill="#fff" stroke="#ef4444" stroke-width="2"/>
+    <circle cx="26" cy="28" r="15" fill="#ef4444"/><text x="26" y="34" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+    <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Uninstall</text>
+    <text x="16" y="66" font-size="12.5" fill="#334155">Settings → Apps →</text>
+    <text x="16" y="84" font-size="12.5" fill="#334155" font-weight="600">Akkhara Keyboard</text>
+    <text x="16" y="108" font-size="12.5" fill="#334155">• removes the keyboard,</text>
+    <text x="28" y="126" font-size="12.5" fill="#334155">update check, folder</text>
+    <text x="16" y="146" font-size="12.5" fill="#334155">• files still open in apps</text>
+    <text x="28" y="164" font-size="12.5" fill="#334155">go to Windows' Temp</text>
+    <rect x="16" y="184" width="178" height="30" rx="7" fill="#e3f6ee"/><text x="105" y="204" font-size="12" fill="#127a55" text-anchor="middle" font-weight="600">no restart</text>
+  </g>
+  <g stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)">
+    <path d="M238 205 H262"/><path d="M476 205 H500"/><path d="M714 205 H738"/>
+    <path d="M847 322 V356 H133 V324"/>
+  </g>
+  <text x="490" y="378" font-size="13" fill="#64748b" text-anchor="middle">Install again any time: same Setup.exe (a reinstall or a newer version works the same way)</text>
+  <text x="490" y="404" font-size="12" fill="#94a3b8" text-anchor="middle">Files moved to Windows' Temp are deleted by Windows at your next normal restart: you never have to restart for Akkhara.</text>
+</svg>

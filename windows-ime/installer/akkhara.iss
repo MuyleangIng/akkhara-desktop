@@ -50,29 +50,32 @@ WizardSmallImageFile=wizard-small-1x.bmp,wizard-small-2x.bmp
 Compression=lzma2
 SolidCompression=yes
 CloseApplications=no
+RestartIfNeededByRun=no
 LicenseFile={#Stage}\LICENSE.txt
 
 [Tasks]
 Name: addkeyboard; Description: "Add Akkhara to my keyboards now (Khmer → Akkhara). Switch with Win + Space."
-Name: shortcuts; Description: "Start menu shortcuts (guide, keyboard settings, uninstall)"
+Name: shortcuts; Description: "Start menu shortcuts (guide, keyboard settings, check for updates, uninstall)"
+Name: autoupdate; Description: "Check GitHub for a new version once a week (the keyboard itself stays offline)"
 
 [Files]
-; the keyboard DLLs: Setup registers them (regserver) and unregisters them on uninstall.
-; restartreplace: an app may still use the old DLL; it is replaced after a restart.
-Source: "{#Stage}\x64\AkkharaIME.dll"; DestDir: "{app}\x64"; Flags: ignoreversion regserver 64bit restartreplace uninsrestartdelete
-Source: "{#Stage}\x86\AkkharaIME.dll"; DestDir: "{app}\x86"; Flags: ignoreversion regserver 32bit restartreplace uninsrestartdelete
-Source: "{#Stage}\x64\*"; Excludes: "AkkharaIME.dll"; DestDir: "{app}\x64"; Flags: ignoreversion restartreplace uninsrestartdelete
-Source: "{#Stage}\x86\*"; Excludes: "AkkharaIME.dll"; DestDir: "{app}\x86"; Flags: ignoreversion restartreplace uninsrestartdelete
+; The keyboard DLLs are loaded into every open app, so they are often "in use". No restart is
+; needed: [Code] moves in-use files out of the way (Windows allows moving, not deleting) and
+; registers / unregisters the keyboard itself (see MoveInUseFiles, RegisterKeyboard).
+Source: "{#Stage}\x64\*"; DestDir: "{app}\x64"; Flags: ignoreversion
+Source: "{#Stage}\x86\*"; DestDir: "{app}\x86"; Flags: ignoreversion
 Source: "{#Stage}\model\*"; DestDir: "{app}\model"; Flags: ignoreversion
 Source: "{#Stage}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Stage}\THIRD_PARTY_NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Stage}\add-keyboard.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Stage}\update.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\akkhara.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "howto.bmp"; Flags: dontcopy
 
 [Icons]
 Name: "{autoprograms}\Akkhara\Akkhara guide (how to type)"; Filename: "{#Guide}"; Tasks: shortcuts
 Name: "{autoprograms}\Akkhara\Keyboard settings"; Filename: "{win}\explorer.exe"; Parameters: "ms-settings:regionlanguage"; IconFilename: "{app}\akkhara.ico"; Tasks: shortcuts
+Name: "{autoprograms}\Akkhara\Check for updates"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\update.ps1"""; IconFilename: "{app}\akkhara.ico"; Tasks: shortcuts
 Name: "{autoprograms}\Akkhara\Uninstall Akkhara Keyboard"; Filename: "{uninstallexe}"; IconFilename: "{app}\akkhara.ico"; Tasks: shortcuts
 
 [Run]
@@ -94,6 +97,88 @@ FinishedLabel=Press Win + Space and choose "Akkhara (Sing Khmer)", then type Sin
 var
   HowToPage: TWizardPage;
   KeyboardAdded: Boolean;
+
+const
+  MOVEFILE_REPLACE_EXISTING = 1;
+  MOVEFILE_DELAY_UNTIL_REBOOT = 4;
+
+function MoveFileEx(Existing, NewName: string; Flags: Cardinal): Boolean;
+  external 'MoveFileExW@kernel32.dll stdcall';
+function MoveFileExDelete(Existing: string; NewName: Cardinal; Flags: Cardinal): Boolean;
+  external 'MoveFileExW@kernel32.dll stdcall';
+function GetTickCount: Cardinal;
+  external 'GetTickCount@kernel32.dll stdcall';
+
+{ A folder on the SAME drive as the app (moving an in-use file only works within one drive). }
+function TrashDir: string;
+begin
+  if CompareText(ExtractFileDrive(ExpandConstant('{app}')), ExtractFileDrive(ExpandConstant('{win}'))) = 0 then
+    Result := ExpandConstant('{win}\Temp\Akkhara-removed')
+  else
+    Result := ExtractFileDrive(ExpandConstant('{app}')) + '\Akkhara-removed';
+  ForceDirectories(Result);
+end;
+
+{ Delete the files of one folder; a file still loaded by an open app cannot be deleted, so it is
+  MOVED to TrashDir and deleted at the next normal restart. The app folder itself is freed now:
+  no "restart Windows" question. }
+procedure MoveInUseFiles(Dir: string);
+var
+  F: TFindRec;
+  Path, Target: string;
+begin
+  if FindFirst(Dir + '\*', F) then
+  try
+    repeat
+      if (F.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then
+      begin
+        Path := Dir + '\' + F.Name;
+        if not DeleteFile(Path) then
+        begin
+          Target := TrashDir + '\' + IntToStr(GetTickCount) + '-' + F.Name;
+          if MoveFileEx(Path, Target, MOVEFILE_REPLACE_EXISTING) then
+            MoveFileExDelete(Target, 0, MOVEFILE_DELAY_UNTIL_REBOOT);
+        end;
+      end;
+    until not FindNext(F);
+  finally
+    FindClose(F);
+  end;
+end;
+
+{ Weekly "Akkhara update check" for the user who started Setup: runs update.ps1 -Quiet, which only
+  asks when GitHub has a newer release. }
+procedure AddUpdateTask;
+var
+  Code: Integer;
+begin
+  ExecAsOriginalUser(ExpandConstant('{sys}\schtasks.exe'),
+    '/Create /F /SC WEEKLY /TN "Akkhara update check" /TR "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File \"' +
+    ExpandConstant('{app}\update.ps1') + '\" -Quiet"', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
+procedure RemoveUpdateTask;
+var
+  Code: Integer;
+begin
+  Exec(ExpandConstant('{sys}\schtasks.exe'), '/Delete /F /TN "Akkhara update check"', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
+{ regsvr32 for the 64-bit and the 32-bit keyboard DLL (Unregister = remove it). }
+procedure RegisterKeyboard(Unregister: Boolean);
+var
+  Code: Integer;
+  Flag: string;
+begin
+  Flag := '/s ';
+  if Unregister then Flag := '/u /s ';
+  if FileExists(ExpandConstant('{app}\x64\AkkharaIME.dll')) then
+    Exec(ExpandConstant('{sys}\regsvr32.exe'), Flag + '"' + ExpandConstant('{app}\x64\AkkharaIME.dll') + '"',
+      '', SW_HIDE, ewWaitUntilTerminated, Code);
+  if FileExists(ExpandConstant('{app}\x86\AkkharaIME.dll')) then
+    Exec(ExpandConstant('{syswow64}\regsvr32.exe'), Flag + '"' + ExpandConstant('{app}\x86\AkkharaIME.dll') + '"',
+      '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
 
 { A page with a picture: how to switch (Win + Space) and type. }
 procedure InitializeWizard;
@@ -150,9 +235,17 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+  { update: the old DLLs may be in use → move them away so the new ones can be written }
+  if CurStep = ssInstall then
+  begin
+    MoveInUseFiles(ExpandConstant('{app}\x64'));
+    MoveInUseFiles(ExpandConstant('{app}\x86'));
+  end;
   if CurStep = ssPostInstall then
   begin
+    RegisterKeyboard(False);
     AllowStoreApps;
+    if WizardIsTaskSelected('autoupdate') then AddUpdateTask;
     KeyboardAdded := True;
     if WizardIsTaskSelected('addkeyboard') then
     begin
@@ -174,12 +267,16 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Code: Integer;
 begin
-  { before the files are deleted: take Akkhara out of the keyboard list }
+  { before Setup deletes the files: take Akkhara out of the keyboard list, unregister it, and move
+    the DLLs that open apps still use out of the folder (so no restart is needed) }
   if CurUninstallStep = usUninstall then
+  begin
     Exec('powershell.exe',
       '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\add-keyboard.ps1') + '" -Tip "{#Tip}" -Remove',
       '', SW_HIDE, ewWaitUntilTerminated, Code);
-  if (CurUninstallStep = usPostUninstall) and DirExists(ExpandConstant('{app}')) and (not UninstallSilent) then
-    MsgBox('Akkhara is removed. A few files were still in use by open apps; they are deleted when you restart Windows.',
-      mbInformation, MB_OK);
+    RegisterKeyboard(True);
+    RemoveUpdateTask;
+    MoveInUseFiles(ExpandConstant('{app}\x64'));
+    MoveInUseFiles(ExpandConstant('{app}\x86'));
+  end;
 end;
