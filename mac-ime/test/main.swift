@@ -80,4 +80,6 @@ check("⌘C is not taken", String(c2.handle(key("c", 8, .command), client: digit
 
 Engine.shared.shutdown()
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
-exit(failures == 0 ? 0 : 1)
+fflush(stdout)
+// quit at once: skip C++ static clean-up (ONNX Runtime threads can still be ending; the real keyboard never quits itself)
+_exit(failures == 0 ? 0 : 1)
