@@ -13,7 +13,8 @@ From the [latest release](https://github.com/MuyleangIng/akkhara-desktop/release
 | Your computer | Download | What you get |
 |---|---|---|
 | **Windows 10 / 11** ⭐ recommended | **`Akkhara-Keyboard-Setup-….exe`** | a **real keyboard** next to English: Win + Space → Akkhara, type in any app |
-| Mac (Apple M-series) | `Akkhara-Desktop-…-mac.zip` | test app: a hotkey opens a small window, Enter pastes the Khmer (a real Mac keyboard is coming) |
+| **Mac** (Apple M-series, macOS 13.3+) ⭐ new | **one Terminal line** ([below](#akkhara-keyboard-for-mac)) or `Akkhara-Keyboard-Mac-….zip` | a **real keyboard** in Input Sources: Ctrl + Space → Akkhara, type in any app |
+| Mac, test app | `Akkhara-Desktop-…-mac.zip` | the older popup app: a hotkey opens a small window, Enter pastes the Khmer |
 | Windows, no install | `Akkhara-Desktop-…-windows.exe` | the same test app for Windows; use Setup above if you can |
 
 ## Akkhara Keyboard for Windows 10 / 11
@@ -73,6 +74,54 @@ Apps that were already open while installing may need a restart to see Akkhara.
   restart), so neither an update nor an uninstall asks you to restart.
 - **Install again** any time with the same Setup.
 
+## Akkhara Keyboard for Mac
+
+![Install with one line → choose Akkhara in the menu bar → type in any app](docs/img/mac-1-install-and-type.svg)
+
+Apple M-series Mac, macOS 13.3 or newer. New in 0.4.0: please tell us if something does not work.
+
+### Install (one line, recommended)
+
+Open **Terminal** (⌘ Space → "Terminal") and paste:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MuyleangIng/akkhara-desktop/main/mac-ime/get.sh | bash
+```
+
+It downloads the newest `Akkhara-Keyboard-Mac-….zip` from the releases and installs it into your own
+`~/Library/Input Methods`: **no admin password, no restart**. (The app is not signed by Apple; files
+downloaded this way are not blocked, a zip opened from the browser is.)
+
+Or by hand: download `Akkhara-Keyboard-Mac-….zip`, unzip it and run
+`bash ~/Downloads/"Akkhara Keyboard"/install.sh` in Terminal.
+
+### Switch and type
+1. Click the input menu in the menu bar (**A** or **ក**) → **Akkhara** (icon **អ**), or press **Ctrl + Space**.
+   Not in the menu? System Settings → Keyboard → Input Sources → **Edit…** → **+** → **Khmer** → **Akkhara** → **Add**.
+2. Type Sing Khmer in any app: `nh jg tv sala rean`. The Latin is underlined and the top-5 Khmer appear under it.
+
+| Key | What it does |
+|---|---|
+| **Enter** | insert the highlighted Khmer |
+| **↑ / ↓**, **Tab**, click | choose another suggestion (click inserts it) |
+| **Esc** or **Shift + Enter** | keep the Latin as typed |
+| **Backspace** | delete one letter |
+
+Only a letter starts Sing Khmer; numbers, punctuation and ⌘ shortcuts work as usual.
+Abbreviations: `nh tver ka nv mptc` → #1 ខ្ញុំធ្វើការនៅ mptc, #2 (↓) the full ministry name.
+
+### Update, uninstall (no restart)
+- **Update:** run the same one line again (it always takes the newest release).
+- **Uninstall:**
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/MuyleangIng/akkhara-desktop/main/mac-ime/get.sh | bash -s uninstall
+  ```
+  (or `bash uninstall.sh` from the zip). It is removed from Input Sources and deleted; nothing is left.
+
+Build it yourself: `bash mac-ime/build.sh` (Xcode Command Line Tools; needs
+`third_party/onnxruntime-osx-arm64-1.22.0` and `models/akkhara-mini`), then `bash mac-ime/install.sh`.
+The keyboard uses the same C++ engine as the Windows one (`core/`), so both give the same top-5.
+
 ## Akkhara Desktop test app (Mac, or Windows without installing)
 
 Download from the [latest release](https://github.com/MuyleangIng/akkhara-desktop/releases/latest):
@@ -129,6 +178,9 @@ any app ──hotkey──▶ Akkhara window ──▶ akkhara-mini (ONNX, CPU) 
 | `akkhara_desktop/app.py` | the window (Tk): typing, suggestions, insert |
 | `akkhara_desktop/platform_mac.py` | Mac: hotkey (Carbon), clipboard, ⌘V |
 | `akkhara_desktop/platform_win.py` | Windows: hotkey, focus, clipboard, Ctrl+V (Windows API) |
+| `core/akkhara_engine.cpp` | the same "brain" in C++, used by the Windows and Mac keyboards |
+| `windows-ime/` | Windows keyboard (TSF, C++) + Setup (Inno) |
+| `mac-ime/` | Mac keyboard (InputMethodKit, Swift): `src/InputController.swift` keys, `CandidateWindow.swift` top-5 window, `test/` typing test |
 | `tests/` | `python -m pytest -q` |
 
 ## License

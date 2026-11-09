@@ -23,6 +23,12 @@ swiftc -O -swift-version 5 -target $TARGET -module-name Akkhara \
   -L"$ORT/lib" -lonnxruntime.1.22.0 -lc++ -framework InputMethodKit -framework Cocoa -framework Carbon \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks -o $APP/Contents/MacOS/Akkhara
 
+# key test: the same input method code + a fake text box (test/KeyTest.swift), no app needed
+swiftc -O -swift-version 5 -target $TARGET -module-name AkkharaKeyTest \
+  -import-objc-header src/akkhara_c.h src/Engine.swift src/CandidateWindow.swift src/InputController.swift \
+  test/main.swift $B/obj/*.o -L"$ORT/lib" -lonnxruntime.1.22.0 -lc++ -framework InputMethodKit -framework Cocoa \
+  -Xlinker -rpath -Xlinker "$(cd "$ORT/lib" && pwd)" -o $B/akkhara_keytest
+
 echo "3/4 bundle"
 sed "s/__VERSION__/$VERSION/g" resources/Info.plist > $APP/Contents/Info.plist
 cp "$ORT/lib/libonnxruntime.1.22.0.dylib" $APP/Contents/Frameworks/

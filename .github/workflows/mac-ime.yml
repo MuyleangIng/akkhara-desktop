@@ -1,0 +1,78 @@
+# Akkhara keyboard for Mac (InputMethodKit): build, test, package.
+#   1. engine self-test: the top-5 must match the Windows/Python engine on 3 sentences
+#   2. typing: key events (letters, Enter, ↓, Esc, Backspace …) → the right text in a fake text box
+#   3. install → registered in Input Sources (Khmer) → uninstall leaves nothing behind
+#   4. Akkhara-Keyboard-Mac-<version>.zip (attached to the release on a v* tag)
+name: mac-ime
+
+on:
+  push:
+    tags: ["v*"]
+    branches: [main]
+    paths: ["mac-ime/**", "core/**", ".github/workflows/mac-ime.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ORT_VERSION: "1.22.0"
+
+jobs:
+  mac-keyboard:
+    runs-on: macos-14   # Apple M-series
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the model (akkhara-mini) and ONNX Runtime
+        run: |
+          bash scripts/get_model.sh
+          mkdir -p third_party && cd third_party
+          curl -fsSL -o ort.tgz "https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-osx-arm64-$ORT_VERSION.tgz"
+          tar xzf ort.tgz && rm ort.tgz
+      - name: Build
+        run: |
+          VER=0.0.0-dev; [ "$GITHUB_REF_TYPE" = tag ] && VER=${GITHUB_REF_NAME#v}
+          echo "VER=$VER" >> $GITHUB_ENV
+          bash mac-ime/build.sh "$VER"
+      - name: Test 1 - engine self-test
+        run: |
+          mac-ime/build/Akkhara.app/Contents/MacOS/Akkhara --selftest | tee selftest.txt
+          grep -q "^  ខ្ញុំចង់ទៅសាលារៀន |" selftest.txt
+          grep -q "^  ខ្ញុំធ្វើការនៅ mptc | ខ្ញុំធ្វើការនៅក្រសួងប្រៃសណីយ៍និងទូរគមនាគមន៍ |" selftest.txt
+          grep -q "^  ធនាគារ aba | ធនាគារអេប៊ីអេ |" selftest.txt
+          echo "PASS"
+      - name: Test 2 - typing (real key events into a fake text box)
+        run: mac-ime/build/akkhara_keytest models/akkhara-mini
+      - name: Test 3 - install, registered as a Khmer input source, uninstall
+        run: |
+          bash mac-ime/package.sh "$VER"
+          mkdir t && ditto -x -k "mac-ime/Akkhara-Keyboard-Mac-$VER.zip" t
+          bash "t/Akkhara Keyboard/install.sh"
+          cat > list.swift <<'SWIFT'
+          import Carbon
+          let l = TISCreateInputSourceList(nil, true).takeRetainedValue() as! [TISInputSource]
+          for s in l {
+            let id = Unmanaged<CFString>.fromOpaque(TISGetInputSourceProperty(s, kTISPropertyInputSourceID)).takeUnretainedValue() as String
+            if id.contains("Akkhara") {
+              let langs = Unmanaged<CFArray>.fromOpaque(TISGetInputSourceProperty(s, kTISPropertyInputSourceLanguages)).takeUnretainedValue() as! [String]
+              print(id, langs)
+            }
+          }
+          SWIFT
+          swift list.swift 2>/dev/null | tee sources.txt
+          grep -q 'com.muyleanging.inputmethod.Akkhara \["km"\]' sources.txt
+          bash "t/Akkhara Keyboard/uninstall.sh"
+          test ! -e "$HOME/Library/Input Methods/Akkhara.app"
+          echo "PASS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: akkhara-keyboard-mac
+          path: mac-ime/Akkhara-Keyboard-Mac-*.zip
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          for i in $(seq 30); do gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 && break; sleep 10; done
+          gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "Akkhara $GITHUB_REF_NAME" --notes "See README."
+          gh release upload "$GITHUB_REF_NAME" mac-ime/Akkhara-Keyboard-Mac-*.zip --clobber -R "$GITHUB_REPOSITORY"

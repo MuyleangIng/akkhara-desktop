@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="380" viewBox="0 0 940 380" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <rect width="940" height="380" rx="14" fill="#f5f5f7" stroke="#d0d7de"/>
+  <g font-size="15" font-weight="700" fill="#1d1d1f">
+    <circle cx="34" cy="34" r="13" fill="#1a5cd9"/><text x="29" y="39" fill="#fff" font-size="14">1</text>
+    <text x="56" y="39">Install (Terminal, one line)</text>
+    <circle cx="334" cy="34" r="13" fill="#1a5cd9"/><text x="329" y="39" fill="#fff" font-size="14">2</text>
+    <text x="356" y="39">Choose Akkhara</text>
+    <circle cx="594" cy="34" r="13" fill="#1a5cd9"/><text x="589" y="39" fill="#fff" font-size="14">3</text>
+    <text x="616" y="39">Type in any app</text>
+  </g>
+  <!-- 1 terminal -->
+  <rect x="20" y="60" width="290" height="230" rx="10" fill="#1e1e1e"/>
+  <circle cx="38" cy="76" r="5" fill="#ff5f57"/><circle cx="54" cy="76" r="5" fill="#febc2e"/><circle cx="70" cy="76" r="5" fill="#28c840"/>
+  <g font-family="Menlo, monospace" font-size="11.5" fill="#e6e6e6">
+    <text x="32" y="108"><tspan fill="#28c840">$</tspan> curl -fsSL https://raw.</text>
+    <text x="32" y="125">githubusercontent.com/</text>
+    <text x="32" y="142">MuyleangIng/akkhara-desktop/</text>
+    <text x="32" y="159">main/mac-ime/get.sh | bash</text>
+    <text x="32" y="190" fill="#9a9a9a">Downloading Akkhara-Keyboard-Mac…</text>
+    <text x="32" y="207" fill="#9a9a9a">Akkhara added to Input Sources</text>
+    <text x="32" y="224" fill="#28c840">Akkhara 0.4.0 installed.</text>
+  </g>
+  <text x="30" y="316" font-size="12.5" fill="#6e6e73">no admin password · no restart</text>
+  <text x="30" y="334" font-size="12.5" fill="#6e6e73">same line again = update</text>
+  <!-- 2 menu bar -->
+  <rect x="330" y="60" width="244" height="26" rx="4" fill="#e8e8ed"/>
+  <text x="344" y="78" font-size="12" fill="#1d1d1f">  Wi-Fi</text>
+  <rect x="500" y="63" width="24" height="20" rx="4" fill="#1d1d1f"/><text x="506" y="78" font-size="13" fill="#fff">អ</text>
+  <text x="530" y="78" font-size="12" fill="#1d1d1f">12:30</text>
+  <rect x="380" y="92" width="194" height="128" rx="9" fill="#fff" stroke="#d0d7de"/>
+  <text x="396" y="118" font-size="13" fill="#1d1d1f">A   ABC</text>
+  <rect x="386" y="128" width="182" height="30" rx="6" fill="#1a5cd9"/>
+  <text x="396" y="148" font-size="13" fill="#fff" font-weight="600">អ   Akkhara</text>
+  <text x="396" y="182" font-size="12" fill="#6e6e73">Open Keyboard Settings…</text>
+  <text x="340" y="252" font-size="12.5" fill="#1d1d1f">or press <tspan font-weight="700">Ctrl + Space</tspan></text>
+  <text x="340" y="276" font-size="12" fill="#6e6e73">Not in the menu? System Settings →</text>
+  <text x="340" y="293" font-size="12" fill="#6e6e73">Keyboard → Input Sources → Edit… →</text>
+  <text x="340" y="310" font-size="12" fill="#6e6e73">+ → Khmer → Akkhara → Add</text>
+  <!-- 3 typing -->
+  <rect x="594" y="60" width="326" height="300" rx="10" fill="#fff" stroke="#d0d7de"/>
+  <text x="608" y="82" font-size="11.5" fill="#6e6e73">Notes, Safari, Telegram, Word …</text>
+  <text x="608" y="112" font-size="15" fill="#1d1d1f" text-decoration="underline">nh jg tv sala rean</text>
+  <rect x="606" y="124" width="302" height="196" rx="10" fill="#fff" stroke="#c7c7cc"/>
+  <rect x="610" y="130" width="294" height="32" rx="7" fill="#d6e4ff"/><rect x="610" y="137" width="4" height="18" rx="2" fill="#1a5cd9"/>
+  <g font-size="12" fill="#6e6e73"><text x="620" y="151" fill="#1a5cd9" font-weight="700">1</text><text x="620" y="183">2</text><text x="620" y="215">3</text><text x="620" y="247">4</text><text x="620" y="279">5</text></g>
+  <g font-size="14.5" fill="#1d1d1f" font-family="Khmer Sangam MN, Khmer OS, sans-serif">
+    <text x="640" y="152" font-weight="600">ខ្ញុំចង់ទៅសាលារៀន</text>
+    <text x="640" y="184">ខ្ញុំចង់ធ្វើសាលារៀន</text>
+    <text x="640" y="216">ខ្ញុំចឹងទៅសាលារៀន</text>
+    <text x="640" y="248">ខ្ញុំចង់ទៅសាលារាង</text>
+    <text x="640" y="280">ញ៉ាំចង់ទៅសាលារៀន</text>
+  </g>
+  <text x="614" y="308" font-size="11" fill="#6e6e73">Enter: insert · ↑↓: choose · Esc: keep Latin</text>
+  <text x="608" y="345" font-size="12.5" fill="#1d1d1f"><tspan font-weight="700">Enter</tspan> → ខ្ញុំចង់ទៅសាលារៀន</text>
+</svg>

@@ -13,9 +13,9 @@ final class Engine {
     private var generation: Int64 = 0  // only changed on the main thread
 
     /// Load the model in the background (a second or so); typing works meanwhile (Latin is kept).
-    func start() {
+    func start(modelDir: String? = nil) {
         queue.async {
-            guard let dir = Bundle.main.resourceURL?.appendingPathComponent("model").path else { return }
+            guard let dir = modelDir ?? Bundle.main.resourceURL?.appendingPathComponent("model").path else { return }
             var err = [CChar](repeating: 0, count: 512)
             let h = akk_open(dir, &err, err.count)
             DispatchQueue.main.async {
@@ -56,6 +56,12 @@ final class Engine {
     func cancel() {
         generation += 1
         if let h = handle { akk_set_generation(h, generation) }
+    }
+
+    /// Stop and wait for the background work (before the program quits).
+    func shutdown() {
+        cancel()
+        queue.sync {}
     }
 
     /// #1 right now (used when Enter comes before the suggestions are back).

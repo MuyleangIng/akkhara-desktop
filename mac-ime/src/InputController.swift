@@ -16,7 +16,9 @@ final class AkkharaInputController: IMKInputController {
     private static let help = "Enter: insert · ↑↓: choose · Esc: keep Latin"
 
     private var composing: Bool { !latin.isEmpty }
-    private var textClient: (IMKTextInput & NSObjectProtocol)? { client() }
+    // the text box that sent the last key (falls back to IMK's current client)
+    private weak var sender: (IMKTextInput & NSObjectProtocol)?
+    private var textClient: (IMKTextInput & NSObjectProtocol)? { sender ?? client() }
 
     override func recognizedEvents(_ sender: Any!) -> Int {
         Int(NSEvent.EventTypeMask.keyDown.rawValue)
@@ -40,6 +42,7 @@ final class AkkharaInputController: IMKInputController {
     // ---- keys ---------------------------------------------------------------------------------
     override func handle(_ event: NSEvent!, client sender: Any!) -> Bool {
         guard let event = event, event.type == .keyDown else { return false }
+        if let c = sender as? (IMKTextInput & NSObjectProtocol) { self.sender = c }
         let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if !mods.intersection([.command, .control, .option]).isEmpty {  // shortcuts (⌘C …)
             if composing { finish(with: latin) }
