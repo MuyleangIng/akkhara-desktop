@@ -3,7 +3,7 @@
 Type **Sing Khmer** in any app and get **Khmer**: `nh jg tv sala rean` → **ខ្ញុំចង់ទៅសាលារៀន**
 
 It uses the same AI model as the Akkhara phone keyboard
-([akkhara-mini](https://huggingface.co/INGMUYLEANG/Akkhara-Mini-Khmer-ONNX), ONNX int8, 18.5 MB) and runs
+([akkhara-mini](https://huggingface.co/muyleanging/Akkhara-Mini-Khmer-ONNX), ONNX int8, 18.5 MB) and runs
 **offline on your computer**; nothing you type is sent anywhere. Made by Ing Muyleang.
 
 ## Which file do I download?
@@ -185,4 +185,4 @@ any app ──hotkey──▶ Akkhara window ──▶ akkhara-mini (ONNX, CPU) 
 
 ## License
 
-Code: Apache-2.0 © 2026 Ing Muyleang. Model: [akkhara-mini](https://huggingface.co/INGMUYLEANG/Akkhara-Mini-Khmer-ONNX) (Apache-2.0).
+Code: Apache-2.0 © 2026 Ing Muyleang. Model: [akkhara-mini](https://huggingface.co/muyleanging/Akkhara-Mini-Khmer-ONNX) (Apache-2.0).

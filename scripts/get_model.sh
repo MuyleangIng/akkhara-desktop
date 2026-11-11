@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p models/akkhara-mini
-base="https://huggingface.co/INGMUYLEANG/Akkhara-Mini-Khmer-ONNX/resolve/main/onnx"
+base="https://huggingface.co/muyleanging/Akkhara-Mini-Khmer-ONNX/resolve/main/onnx"
 for f in encoder.int8.onnx decoder.int8.onnx tokenizer.json config.json abbreviations.tsv; do
   curl -fL --progress-bar -o "models/akkhara-mini/$f" "$base/$f"
 done
